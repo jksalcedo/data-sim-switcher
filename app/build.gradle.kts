@@ -32,6 +32,7 @@ android {
     }
     buildFeatures {
         aidl = true
+        compose = true
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

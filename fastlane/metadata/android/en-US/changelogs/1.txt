@@ -1,0 +1,3 @@
+- Added Quick Settings Tile for instant SIM switching.
+- Integrated libsu for zero-daemon root execution.
+- Added dynamic SIM name resolution for tile subtitles.

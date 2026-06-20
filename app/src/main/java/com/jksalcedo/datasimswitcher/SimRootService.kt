@@ -14,6 +14,8 @@ class SimRootService : RootService() {
         const val TELEPHONY_INTERFACE = "com.android.internal.telephony.ITelephony"
     }
 
+    var currentName: String = ""
+
     override fun onBind(intent: Intent): IBinder {
         return SimSwitcherBinder()
     }
@@ -33,9 +35,14 @@ class SimRootService : RootService() {
                 if (activeSims.size < 2) return // Nothing to switch to
 
                 // Calculate the next SIM ID
-                val currentIndex = activeSims.indexOf(currentSubId)
+                val currentIndex = activeSims.indexOfFirst { it.subscriptionId == currentSubId }
                 val nextIndex = if (currentIndex != -1) (currentIndex + 1) % activeSims.size else 0
-                val targetSubId = activeSims[nextIndex]
+                val targetSim = activeSims[nextIndex]
+                val targetSubId = targetSim.subscriptionId
+
+                currentName = targetSim.displayName?.toString()
+                    ?: targetSim.carrierName?.toString()
+                            ?: "SIM ${targetSim.simSlotIndex + 1}"
 
                 // Execute the switch
                 invokeMethod(
@@ -53,6 +60,10 @@ class SimRootService : RootService() {
                 e.printStackTrace()
             }
         }
+
+        override fun getDisplayName(): String {
+            return currentName
+        }
     }
 
     // Helper Functions
@@ -67,8 +78,8 @@ class SimRootService : RootService() {
         return stubClass.getMethod("asInterface", IBinder::class.java).invoke(null, binder)!!
     }
 
-    private fun getActiveSubIds(isubService: Any): List<Int> {
-        val activeIds = mutableListOf<Int>()
+    private fun getActiveSubIds(isubService: Any): List<SubscriptionInfo> {
+        val activeSims = mutableListOf<SubscriptionInfo>()
 
         val value = try {
             invokeMethod(isubService, SUBSCRIPTION_INTERFACE, "getActiveSubscriptionInfoList",
@@ -86,11 +97,9 @@ class SimRootService : RootService() {
         if (value is List<*>) {
             // Sort by slot index to ensure consistent toggling
             val sortedList = value.filterIsInstance<SubscriptionInfo>().sortedBy { it.simSlotIndex }
-            for (item in sortedList) {
-                activeIds.add(item.subscriptionId)
-            }
+            activeSims.addAll(sortedList)
         }
-        return activeIds
+        return activeSims
     }
 
     private fun setMobileDataEnabled(subId: Int) {

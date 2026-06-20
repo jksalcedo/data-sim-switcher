@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep the AIDL interface and its inner classes safe from R8 obfuscation
+-keep class com.jksalcedo.datasimswitcher.IRootSimService { *; }
+-keep class com.jksalcedo.datasimswitcher.IRootSimService$* { *; }
+
+# Keep libsu internals safe
+-keep class com.topjohnwu.superuser.** { *; }

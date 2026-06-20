@@ -10,7 +10,6 @@ class Application : Application() {
         // Initialize libsu globally
         Shell.setDefaultBuilder(
             Shell.Builder.create()
-                .setFlags(Shell.FLAG_REDIRECT_STDERR)
                 .setTimeout(10)
         )
     }

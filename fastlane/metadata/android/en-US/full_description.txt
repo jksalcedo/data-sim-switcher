@@ -3,6 +3,7 @@ A lightweight, purely root-based Quick Settings tile to switch the default mobil
 Unlike other implementations that rely on Shizuku and persistent background daemons, Data SIM Switcher uses topjohnwu's libsu to spawn a Root IPC service for the exact millisecond the tile is tapped. It is incredibly fast, survives reboots reliably, and uses zero background battery.
 
 Features:
+
 • Zero Daemons: Uses on-demand Magisk/KernelSU root access.
 • No Permissions Required: Bypasses Android's READ_PHONE_STATE restrictions entirely by doing all calculation logic natively in the root daemon.
 • Dynamic Tile Subtitle: Displays the name of the currently active data SIM (Requires Android 10+).

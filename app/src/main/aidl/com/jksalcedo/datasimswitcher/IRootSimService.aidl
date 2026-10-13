@@ -1,6 +1,6 @@
 package com.jksalcedo.datasimswitcher;
 
 interface IRootSimService {
-    oneway void switchDataSim();
+    @nullable String switchDataSim();
     String getDisplayName();
 }

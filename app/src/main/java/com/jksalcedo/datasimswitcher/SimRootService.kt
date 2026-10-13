@@ -24,7 +24,7 @@ class SimRootService : RootService() {
     private inner class SimSwitcherBinder : IRootSimService.Stub() {
 
         @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
-        override fun switchDataSim() {
+        override fun switchDataSim(): String? {
             try {
                 val iSubService = getSystemServiceInterface("isub", SUBSCRIPTION_INTERFACE)
 
@@ -57,8 +57,11 @@ class SimRootService : RootService() {
                 // Turn on data for the newly selected SIM
                 setMobileDataEnabled(targetSubId)
 
+                curentName // Return the display name of the newly selected SIM
+
             } catch (e: Exception) {
                 e.printStackTrace()
+                null // Return null if an error occurs
             }
         }
 
@@ -144,7 +147,7 @@ class SimRootService : RootService() {
         val method = getOrPut(cacheKey) {
             Class.forName(interfaceName).getMethod(methodName, *paramTypes)
         }
-        
+
         return method.invoke(targetInstance, *args)
     }
 }

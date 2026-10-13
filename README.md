@@ -17,7 +17,6 @@ Unlike other implementations that rely on Shizuku and persistent daemons, this a
 
 ## Dependencies
 * [libsu](https://github.com/topjohnwu/libsu) - Android Root IPC
-* Jetpack Compose - UI
 
 ## Credit
 Architecture inspired by the reflection engine found in [Mygod/DataSimTile](https://github.com/Mygod/DataSimTile).

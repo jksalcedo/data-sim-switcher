@@ -15,6 +15,7 @@ class SimRootService : RootService() {
     }
 
     var currentName: String = ""
+    private val methodCache = ConcurrentHashMap<String, Method>()
 
     override fun onBind(intent: Intent): IBinder {
         return SimSwitcherBinder()
@@ -137,8 +138,13 @@ class SimRootService : RootService() {
         paramTypes: Array<Class<*>> = emptyArray(),
         vararg args: Any?
     ): Any? {
+        val cacheKey = "$interfaceName::$methodName::${paramTypes.joinToString(",") { it.name }}"
+
         // reflect against the Interface class string
-        val method = Class.forName(interfaceName).getMethod(methodName, *paramTypes)
+        val method = getOrPut(cacheKey) {
+            Class.forName(interfaceName).getMethod(methodName, *paramTypes)
+        }
+        
         return method.invoke(targetInstance, *args)
     }
 }

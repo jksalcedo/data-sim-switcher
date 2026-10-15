@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.IBinder
 import android.telephony.SubscriptionInfo
 import com.topjohnwu.superuser.ipc.RootService
+import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 
 class SimRootService : RootService() {
 
@@ -33,7 +35,7 @@ class SimRootService : RootService() {
 
                 // Get list of all inserted/active SIMs
                 val activeSims = getActiveSubIds(iSubService)
-                if (activeSims.size < 2) return // Nothing to switch to
+                if (activeSims.size < 2) return null // Nothing to switch to
 
                 // Calculate the next SIM ID
                 val currentIndex = activeSims.indexOfFirst { it.subscriptionId == currentSubId }
@@ -57,7 +59,7 @@ class SimRootService : RootService() {
                 // Turn on data for the newly selected SIM
                 setMobileDataEnabled(targetSubId)
 
-                curentName // Return the display name of the newly selected SIM
+                return currentName // Return the display name of the newly selected SIM
 
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -144,7 +146,7 @@ class SimRootService : RootService() {
         val cacheKey = "$interfaceName::$methodName::${paramTypes.joinToString(",") { it.name }}"
 
         // reflect against the Interface class string
-        val method = getOrPut(cacheKey) {
+        val method = methodCache.getOrPut(cacheKey) {
             Class.forName(interfaceName).getMethod(methodName, *paramTypes)
         }
 

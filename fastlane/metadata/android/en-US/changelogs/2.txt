@@ -1,0 +1,5 @@
+- Reworked the Quick Settings tile: it now keeps the SIM service bound while the panel is open for faster, more reliable switching.
+- The tile shows clear visual feedback, highlighting the active SIM and displaying "Switch Failed" when a switch does not succeed.
+- Switches now report the newly selected SIM's name, so the tile subtitle updates immediately.
+- Added reflection method caching for noticeably faster SIM switches.
+- Removed the unused INTERNET permission.

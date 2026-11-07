@@ -1,0 +1,3 @@
+- Display active SIM name as subtitle in Quick Settings tile.
+- Automatically detect active SIM changes made in Android Settings.
+- Improved root service stability and IPC handling.

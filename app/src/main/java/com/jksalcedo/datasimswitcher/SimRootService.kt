@@ -5,6 +5,8 @@ import android.content.Intent
 import android.os.IBinder
 import android.telephony.SubscriptionInfo
 import com.topjohnwu.superuser.ipc.RootService
+import java.lang.reflect.Method
+import java.util.concurrent.ConcurrentHashMap
 
 class SimRootService : RootService() {
 
@@ -33,7 +35,7 @@ class SimRootService : RootService() {
 
                 // Get list of all inserted/active SIMs
                 val activeSims = getActiveSubIds(iSubService)
-                if (activeSims.size < 2) return // Nothing to switch to
+                if (activeSims.size < 2) return null// Nothing to switch to
 
                 // Calculate the next SIM ID
                 val currentIndex = activeSims.indexOfFirst { it.subscriptionId == currentSubId }
@@ -57,16 +59,32 @@ class SimRootService : RootService() {
                 // Turn on data for the newly selected SIM
                 setMobileDataEnabled(targetSubId)
 
-                curentName // Return the display name of the newly selected SIM
+                return currentName
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                null // Return null if an error occurs
+                return null // Return null if an error occurs
             }
         }
 
         override fun getDisplayName(): String {
-            return currentName
+            return getActiveDataSimName()
+        }
+
+        private fun getActiveDataSimName(): String {
+            return try {
+                val iSubService = getSystemServiceInterface("isub", SUBSCRIPTION_INTERFACE)
+                val currentSubId = invokeMethod(iSubService, SUBSCRIPTION_INTERFACE, "getDefaultDataSubId") as Int
+                val activeSims = getActiveSubIds(iSubService)
+                val currentSim = activeSims.firstOrNull { it.subscriptionId == currentSubId }
+
+                currentSim?.displayName?.toString()
+                    ?: currentSim?.carrierName?.toString()
+                    ?: if (currentSim != null) "SIM ${currentSim.simSlotIndex + 1}" else "Unknown"
+            } catch (e: Exception) {
+                e.printStackTrace()
+                "Unknown"
+            }
         }
     }
 
@@ -78,7 +96,7 @@ class SimRootService : RootService() {
         val binder = serviceManagerClass.getMethod("getService", String::class.java)
             .invoke(null, serviceName) as IBinder
 
-        val stubClass = Class.forName("$interfaceName\$Stub")
+        val stubClass = Class.forName($$"$$interfaceName$Stub")
         return stubClass.getMethod("asInterface", IBinder::class.java).invoke(null, binder)!!
     }
 
@@ -144,7 +162,7 @@ class SimRootService : RootService() {
         val cacheKey = "$interfaceName::$methodName::${paramTypes.joinToString(",") { it.name }}"
 
         // reflect against the Interface class string
-        val method = getOrPut(cacheKey) {
+        val method = methodCache.getOrPut(cacheKey) {
             Class.forName(interfaceName).getMethod(methodName, *paramTypes)
         }
 

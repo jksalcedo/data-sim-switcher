@@ -46,9 +46,21 @@ class DataSimTileService : TileService() {
 
         if (rootService != null) {
             updateTileUI()
-        } else if (Shell.getShell().isRoot) {
-            val intent = Intent(this, SimRootService::class.java)
-            RootService.bind(intent, connection)
+        } else {
+            serviceScope.launch {
+                val isRoot = withContext(Dispatchers.IO) { Shell.getShell().isRoot }
+                if (isRoot) {
+                    val intent = Intent(this@DataSimTileService, SimRootService::class.java)
+                    RootService.bind(intent, connection)
+                } else {
+                    // Show tile as inactive so the user knows root is missing
+                    qsTile.state = Tile.STATE_INACTIVE
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        qsTile.subtitle = "No root"
+                    }
+                    qsTile.updateTile()
+                }
+            }
         }
     }
 

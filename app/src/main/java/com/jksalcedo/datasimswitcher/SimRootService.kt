@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.IBinder
 import android.telephony.SubscriptionInfo
+import android.util.Log
 import com.topjohnwu.superuser.ipc.RootService
 import java.lang.reflect.Method
 import java.util.concurrent.ConcurrentHashMap
@@ -11,12 +12,12 @@ import java.util.concurrent.ConcurrentHashMap
 class SimRootService : RootService() {
 
     companion object {
+        private const val TAG = "SimRootService"
         const val SHELL_PACKAGE = "com.android.shell"
         const val SUBSCRIPTION_INTERFACE = "com.android.internal.telephony.ISub"
         const val TELEPHONY_INTERFACE = "com.android.internal.telephony.ITelephony"
     }
 
-    var currentName: String = ""
     private val methodCache = ConcurrentHashMap<String, Method>()
 
     override fun onBind(intent: Intent): IBinder {
@@ -30,12 +31,12 @@ class SimRootService : RootService() {
             try {
                 val iSubService = getSystemServiceInterface("isub", SUBSCRIPTION_INTERFACE)
 
-                //  Get the current active data SIM ID
+                // Get the current active data SIM ID
                 val currentSubId = invokeMethod(iSubService, SUBSCRIPTION_INTERFACE, "getDefaultDataSubId") as Int
 
                 // Get list of all inserted/active SIMs
                 val activeSims = getActiveSubIds(iSubService)
-                if (activeSims.size < 2) return null// Nothing to switch to
+                if (activeSims.size < 2) return null // Nothing to switch to
 
                 // Calculate the next SIM ID
                 val currentIndex = activeSims.indexOfFirst { it.subscriptionId == currentSubId }
@@ -43,9 +44,9 @@ class SimRootService : RootService() {
                 val targetSim = activeSims[nextIndex]
                 val targetSubId = targetSim.subscriptionId
 
-                currentName = targetSim.displayName?.toString()
+                val newSimName = targetSim.displayName?.toString()
                     ?: targetSim.carrierName?.toString()
-                            ?: "SIM ${targetSim.simSlotIndex + 1}"
+                    ?: "SIM ${targetSim.simSlotIndex + 1}"
 
                 // Execute the switch
                 invokeMethod(
@@ -59,10 +60,10 @@ class SimRootService : RootService() {
                 // Turn on data for the newly selected SIM
                 setMobileDataEnabled(targetSubId)
 
-                return currentName
+                return newSimName
 
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "switchDataSim failed", e)
                 return null // Return null if an error occurs
             }
         }
@@ -82,7 +83,7 @@ class SimRootService : RootService() {
                     ?: currentSim?.carrierName?.toString()
                     ?: if (currentSim != null) "SIM ${currentSim.simSlotIndex + 1}" else "Unknown"
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e(TAG, "getActiveDataSimName failed", e)
                 "Unknown"
             }
         }
